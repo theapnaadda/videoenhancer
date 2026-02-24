@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Enhancer & Upscaler</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 600px;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 2px dashed #475569;
+            border-radius: 12px;
+            padding: 40px 20px;
+            background-color: #0f172a;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: var(--primary);
+            background-color: #1e1b4b;
+        }
+
+        .upload-area input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-size: 13px;
+            color: var(--primary);
+            word-break: break-all;
+        }
+
+        .options-group {
+            text-align: left;
+            margin-bottom: 25px;
+        }
+
+        .options-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .quality-selector {
+            width: 100%;
+            padding: 12px;
+            background-color: #0f172a;
+            color: var(--text-main);
+            border: 1px solid #475569;
+            border-radius: 8px;
+            font-size: 16px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .quality-selector:focus {
+            border-color: var(--primary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .btn:disabled {
+            background-color: #475569;
+            cursor: not-allowed;
+        }
+
+        /* Progress Bar Styles */
+        .progress-wrapper {
+            display: none;
+            margin-top: 25px;
+            text-align: left;
+        }
+
+        .progress-text {
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 8px;
+            background-color: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, #6366f1, #c084fc);
+            border-radius: 4px;
+            transition: width 0.4s ease;
+        }
+
+        /* Result Area */
+        .result-area {
+            display: none;
+            margin-top: 25px;
+            padding: 20px;
+            background-color: rgba(34, 197, 94, 0.1);
+            border: 1px solid #22c55e;
+            border-radius: 12px;
+        }
+
+        .result-area h3 {
+            color: #22c55e;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .download-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 12px;
+            background-color: #22c55e;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background-color: #16a34a;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>AI Video Enhancer</h1>
+            <p>Upscale and enhance your videos to 1080p, 2K, 4K, or 8K instantly.</p>
+        </div>
+
+        <!-- Upload Section -->
+        <label class="upload-area" id="drop-area">
+            <div class="upload-icon">📁</div>
+            <div>Click to upload or drag & drop your video here</div>
+            <div class="file-name" id="file-name"></div>
+            <input type="file" id="video-upload" accept="video/mp4,video/x-m4v,video/*">
+        </label>
+
+        <!-- Quality Selection -->
+        <div class="options-group">
+            <label for="quality">Select Target Resolution</label>
+            <select id="quality" class="quality-selector">
+                <option value="1080p">1080p (Full HD)</option>
+                <option value="2K">2K (Quad HD)</option>
+                <option value="4K">4K (Ultra HD)</option>
+                <option value="8K">8K (Full Ultra HD)</option>
+            </select>
+        </div>
+
+        <!-- Action Button -->
+        <button class="btn" id="enhance-btn">Enhance & Upscale Video</button>
+
+        <!-- Loading / Progress Section -->
+        <div class="progress-wrapper" id="progress-wrapper">
+            <div class="progress-text">
+                <span id="status-text">Uploading & Processing...</span>
+                <span id="percentage">0%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </div>
+
+        <!-- Result / Download Section -->
+        <div class="result-area" id="result-area">
+            <h3>🎉 Upscaling Complete!</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">
+                Your video has been successfully enhanced to <span id="final-quality" style="color:#fff;"></span>.
+            </p>
+            <a href="#" class="download-btn" id="download-btn" download>⬇ Download Enhanced Video</a>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const fileInput = document.getElementById('video-upload');
+        const fileNameDisplay = document.getElementById('file-name');
+        const enhanceBtn = document.getElementById('enhance-btn');
+        const dropArea = document.getElementById('drop-area');
+        const qualitySelect = document.getElementById('quality');
+        
+        const progressWrapper = document.getElementById('progress-wrapper');
+        const progressBar = document.getElementById('progress-bar');
+        const percentageText = document.getElementById('percentage');
+        const statusText = document.getElementById('status-text');
+        
+        const resultArea = document.getElementById('result-area');
+        const downloadBtn = document.getElementById('download-btn');
+        const finalQualityText = document.getElementById('final-quality');
+
+        let selectedFile = null;
+
+        // Handle File Selection
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                fileNameDisplay.textContent = `Selected: ${selectedFile.name}`;
+                resetUI();
+            }
+        });
+
+        // Drag & Drop Functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.add('dragover'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => dropArea.classList.remove('dragover'), false);
+        });
+
+        dropArea.addEventListener('drop', (e) => {
+            let dt = e.dataTransfer;
+            let files = dt.files;
+            if(files.length > 0 && files[0].type.startsWith('video/')) {
+                fileInput.files = files;
+                selectedFile = files[0];
+                fileNameDisplay.textContent = `Selected: ${selectedFile.name}`;
+                resetUI();
+            } else {
+                alert("Please drop a valid video file.");
+            }
+        });
+
+        // Handle Enhancement Process
+        enhanceBtn.addEventListener('click', () => {
+            if (!selectedFile) {
+                alert("Please upload a video file first.");
+                return;
+            }
+
+            // Lock UI
+            enhanceBtn.disabled = true;
+            resultArea.style.display = 'none';
+            progressWrapper.style.display = 'block';
+            
+            // Note: In a real application, you would use FormData and fetch() or axios here 
+            // to send the file to your Python/Node.js backend for AI processing.
+            
+            // SIMULATING backend processing time
+            let progress = 0;
+            progressBar.style.width = '0%';
+            
+            const interval = setInterval(() => {
+                // Randomly increment progress to look realistic
+                progress += Math.random() * 8 + 2; 
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    clearInterval(interval);
+                    showResult();
+                }
+
+                // Update text based on progress
+                if (progress < 30) statusText.textContent = "Uploading to server...";
+                else if (progress < 70) statusText.textContent = "Applying AI Enhancement & Upscaling...";
+                else if (progress < 99) statusText.textContent = "Rendering final video...";
+
+                progressBar.style.width = `${progress}%`;
+                percentageText.textContent = `${Math.floor(progress)}%`;
+
+            }, 400); // Speed of simulation
+        });
+
+        // Show Result and Create Download Link
+        function showResult() {
+            progressWrapper.style.display = 'none';
+            resultArea.style.display = 'block';
+            enhanceBtn.disabled = false;
+            enhanceBtn.textContent = "Enhance Another Video";
+            
+            const quality = qualitySelect.value;
+            finalQualityText.textContent = quality;
+
+            // Create a local URL for the downloaded file 
+            // (In reality, this would be the URL returned from your backend server)
+            const videoUrl = URL.createObjectURL(selectedFile);
+            
+            downloadBtn.href = videoUrl;
+            
+            // Format the new file name
+            const originalName = selectedFile.name.split('.')[0];
+            const extension = selectedFile.name.split('.').pop();
+            downloadBtn.download = `${originalName}_${quality}_Enhanced.${extension}`;
+        }
+
+        // Reset UI when a new file is chosen
+        function resetUI() {
+            resultArea.style.display = 'none';
+            progressWrapper.style.display = 'none';
+            enhanceBtn.disabled = false;
+            enhanceBtn.textContent = "Enhance & Upscale Video";
+            progressBar.style.width = '0%';
+        }
+    </script>
+</body>
+      </html>
